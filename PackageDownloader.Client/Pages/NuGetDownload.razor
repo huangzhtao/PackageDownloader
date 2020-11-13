@@ -1,0 +1,357 @@
+﻿@page "/nuget-download"
+
+<Row>
+    <Column ColumnSize="ColumnSize.Is12">
+        <h3>NuGet Package</h3>
+    </Column>
+</Row>
+<Row>
+    <Column ColumnSize="ColumnSize.Is6">
+        <Blazorise.Field>
+            <FieldLabel>Package:</FieldLabel>
+            <Autocomplete MinLength="3"
+                          Data="@searchedReturnPackageNameArray"
+                          TextField="@((item)=>item)"
+                          ValueField="@((item)=>item)"
+                          SearchChanged="@OnPackageNameChanged"
+                          SelectedValue="@selectedPackageName"
+                          SelectedValueChanged="@PackageSearchHandler"
+                          Placeholder="Input more than 3 letters to search...">
+            </Autocomplete>
+        </Blazorise.Field>
+    </Column>
+    <Column ColumnSize="ColumnSize.Is6">
+        <Blazorise.Field>
+            <FieldLabel>Version:</FieldLabel>
+            <SelectList Data="@selectedPackageVersionArray"
+                        TextField="@((item)=>item)"
+                        ValueField="@((item)=>item)"
+                        SelectedValue="@selectedPackageVersion"
+                        SelectedValueChanged="@PackageVersionSelectHandler" />
+        </Blazorise.Field>
+    </Column>
+    @*<Column ColumnSize="ColumnSize.Is1">
+            <Blazorise.Button><Icon Name="IconName.Add" /></Blazorise.Button>
+        </Column>
+        <Column ColumnSize="ColumnSize.Is1">
+            <Blazorise.Button><Icon Name="IconName.Delete" /></Blazorise.Button>
+        </Column>*@
+</Row>
+<Row>
+    <Column ColumnSize="ColumnSize.Is6">
+        <Blazorise.Field Horizontal="true">
+            <Blazorise.FieldLabel ColumnSize="ColumnSize.Is5">Include Pre-released:</Blazorise.FieldLabel>
+            <Blazorise.FieldBody ColumnSize="ColumnSize.Is7">
+                <Blazorise.Switch TValue="bool" @bind-Checked="@includePrereleased">@includePrereleased</Blazorise.Switch>
+            </Blazorise.FieldBody>
+        </Blazorise.Field>
+    </Column>
+    <Column ColumnSize="ColumnSize.Is6">
+        <Blazorise.Field Horizontal="true">
+            <Blazorise.FieldLabel ColumnSize="ColumnSize.Is5">Include Dependency:</Blazorise.FieldLabel>
+            <Blazorise.FieldBody ColumnSize="ColumnSize.Is7">
+                <Blazorise.Switch TValue="bool" @bind-Checked="@includeDependency">@includeDependency</Blazorise.Switch>
+            </Blazorise.FieldBody>
+        </Blazorise.Field>
+    </Column>
+</Row>
+<Row>
+    <Column ColumnSize="ColumnSize.Is6">
+        <Blazorise.Field>
+            <FieldLabel>Repostory:</FieldLabel>
+            <TextEdit @bind-Text="@repostoryURL" Placeholder="Input repostory url..." />
+        </Blazorise.Field>
+    </Column>
+    <Column ColumnSize="ColumnSize.Is6">
+        <Blazorise.Field>
+            <FieldLabel>Target:</FieldLabel>
+            <Autocomplete Data="@allTargetFrameworkNameArray"
+                          TextField="@((item)=>item)"
+                          ValueField="@((item)=>item)"
+                          Filter="AutocompleteFilter.Contains"
+                          SelectedValue="@selectedTargetFrameworkName"
+                          SelectedValueChanged="@TargetFrameworkHandler"
+                          Placeholder="Input target framework..." />
+        </Blazorise.Field>
+    </Column>
+</Row>
+<Divider />
+<Row>
+    <Column ColumnSize="ColumnSize.Is4">
+    </Column>
+    <Column ColumnSize="ColumnSize.Is2">
+        <Blazorise.Button Color="Color.Secondary" Clicked="@ViewLast">View Last</Blazorise.Button>
+    </Column>
+    <Column ColumnSize="ColumnSize.Is1">
+    </Column>
+    <Column ColumnSize="ColumnSize.Is1">
+        <Blazorise.Button Color="Color.Primary" Clicked="@SubmitRequest">Submit</Blazorise.Button>
+    </Column>
+    <Column ColumnSize="ColumnSize.Is4">
+    </Column>
+</Row>
+
+<Modal @ref="NuGetPackageDownloadRequestModal">
+    <ModalBackdrop />
+    <Blazorise.ModalContent>
+        <ModalHeader>
+            <ModalTitle>Request Status</ModalTitle>
+            <Blazorise.CloseButton Clicked="@HideModal" />
+        </ModalHeader>
+        <ModalBody>
+            <Blazorise.Field>
+                <Blazorise.FieldLabel>Status: @requestInfo.Status</Blazorise.FieldLabel>
+            </Blazorise.Field>
+            <Blazorise.Field>
+                <Blazorise.FieldLabel>Resource: @requestInfo.Resource</Blazorise.FieldLabel>
+            </Blazorise.Field>
+            <Blazorise.Field>
+                <Blazorise.FieldLabel>Package downloaded: @requestInfo.DownloadCounter</Blazorise.FieldLabel>
+            </Blazorise.Field>
+            <Blazorise.Field>
+                <Blazorise.FieldLabel>Compress status: @requestInfo.CompressStatus</Blazorise.FieldLabel>
+            </Blazorise.Field>
+            <Blazorise.Field>
+                <Blazorise.FieldLabel>
+                    Download url:<Blazorise.Link To="@requestInfo.DownloadUrl" Title="download">@requestInfo.DownloadUrl</Blazorise.Link>
+                </Blazorise.FieldLabel>
+            </Blazorise.Field>
+            @if (requestInfo.OtherMessage != null)
+            {
+            <Blazorise.Field>
+                <Blazorise.FieldLabel>
+                    Other Message: @requestInfo.OtherMessage
+                </Blazorise.FieldLabel>
+            </Blazorise.Field>
+            }
+        </ModalBody>
+        <ModalFooter>
+            <Blazorise.Button Color="Color.Secondary" Clicked="@HideModal">Close</Blazorise.Button>
+        </ModalFooter>
+    </Blazorise.ModalContent>
+</Modal>
+
+@using System.Net.Http
+@using PackageDownloader.Shared.NuGet;
+@using PackageDownloader.Shared.Response;
+@inject HttpClient Http
+@using Microsoft.AspNetCore.SignalR.Client
+@inject NavigationManager NavigationManager
+@implements IDisposable
+
+@code {
+    private const string NuGetServiceURL = "api/NuGet/";
+    private const string HubURL = "DownloadPackageHub";
+    private const int MaxMessageLength = 20;
+
+    // for package
+    private IEnumerable<string> searchedReturnPackageNameArray;
+    private string selectedPackageName { get; set; }
+
+    // for version
+    private IEnumerable<string> selectedPackageVersionArray;
+    private string selectedPackageVersion { get; set; }
+
+    // for Include Pre-released
+    private bool includePrereleased = false;
+
+    // for Include Dependency
+    private bool includeDependency = true;
+
+    // for Target Framework
+    private string selectedTargetFrameworkName;
+
+    // for Repostory
+    private string repostoryURL = "https://api.nuget.org/v3/index.json";
+
+    // for signalr
+    private HubConnection hubConnection;
+
+    // for request status
+    public class RequestInfo
+    {
+        public string Status { get; set; }
+        public string Resource { get; set; }
+        public string DownloadCounter { get; set; }
+        public string CompressStatus { get; set; }
+        public string DownloadUrl { get; set; }
+        public string OtherMessage { get; set; }
+    }
+
+    private RequestInfo requestInfo = new RequestInfo()
+    {
+        Status = "No Request",
+        Resource = "None",
+        DownloadCounter = "0",
+        CompressStatus = "None",
+        DownloadUrl = "#",
+        OtherMessage = null
+    };
+
+    private RequestInfo InitRequestInfo()
+    {
+        return new RequestInfo()
+        {
+            Status = "No Request",
+            Resource = "None",
+            DownloadCounter = "0",
+            CompressStatus = "None",
+            DownloadUrl = "#",
+            OtherMessage = null
+        };
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        searchedReturnPackageNameArray = await Http.GetFromJsonAsync<IEnumerable<string>>($"{NuGetServiceURL}SearchPackage");
+        selectedPackageVersionArray = new List<string> { "No Package" };
+    }
+
+    // Package Search
+    private async Task OnPackageNameChanged(string val)
+    {
+        // trigger search at least input 3 letters
+        if (val != null && val.Length >= 2)
+        {
+            searchedReturnPackageNameArray = await Http.GetFromJsonAsync<IEnumerable<string>>(
+                $"{NuGetServiceURL}SearchPackage?searchName={val}&repostoryUrl={repostoryURL}&includePrerelease={includePrereleased}");
+        }
+    }
+
+    private async Task PackageSearchHandler(object newValue)
+    {
+        selectedPackageName = newValue.ToString();
+
+        // update version
+        selectedPackageVersionArray = await Http.GetFromJsonAsync<IEnumerable<string>>(
+            $"{NuGetServiceURL}GetPackageVersion?packageId={newValue}&repostoryUrl={repostoryURL}&includePrerelease={includePrereleased}");
+        if (selectedPackageVersionArray != null && selectedPackageVersionArray.Count() >= 0)
+        {
+            selectedPackageVersion = selectedPackageVersionArray.First();
+        }
+        else
+        {
+            selectedPackageVersion = "No Package";
+        }
+    }
+
+    static IEnumerable<string> allTargetFrameworkNameArray = new List<string>
+{
+        "ALL",
+        "NETFramework2.0",".NETFramework3.5","NETFramework4.0",".NETFramework4.5",".NETFramework4.6.1",
+        ".NETStandard1.0",".NETStandard1.3",".NETStandard2.0",".NETStandard2.1","net5.0"
+    };
+
+    private void TargetFrameworkHandler(object newValue)
+    {
+        selectedTargetFrameworkName = newValue.ToString();
+    }
+
+    // for version
+    private void PackageVersionSelectHandler(object newValue)
+    {
+        selectedPackageVersion = newValue.ToString();
+    }
+
+    // reference to the modal component
+    private Modal NuGetPackageDownloadRequestModal;
+
+    private void ViewLast()
+    {
+        if (requestInfo == null)
+        {
+            requestInfo = InitRequestInfo();
+        }
+        NuGetPackageDownloadRequestModal.Show();
+    }
+
+    private async Task SubmitRequest()
+    {
+        requestInfo = InitRequestInfo();
+
+        // for signalr - connect signalr
+        hubConnection = new HubConnectionBuilder()
+        .WithUrl(NavigationManager.ToAbsoluteUri(HubURL))
+        .Build();
+
+        hubConnection.On<string>("Message", (message) =>
+        {
+            requestInfo.OtherMessage = message;
+            StateHasChanged();
+        });
+
+        hubConnection.On<ServerResponse>("Response", (response) =>
+        {
+            foreach (var item in response.payload)
+            {
+                switch (item.Key)
+                {
+                    case "Status":
+                        requestInfo.Status = item.Value;
+                        break;
+                    case "Resource":
+                        requestInfo.Resource = item.Value;
+                        break;
+                    case "DownloadCounter":
+                        requestInfo.DownloadCounter = item.Value;
+                        break;
+                    case "CompressStatus":
+                        requestInfo.CompressStatus = item.Value;
+                        break;
+                    case "DownloadUrl":
+                        requestInfo.DownloadUrl = item.Value;
+                        break;
+                    default:
+                        requestInfo.OtherMessage = $"{item.Key}: { item.Value}";
+                        break;
+                }
+                StateHasChanged();
+            }
+        });
+
+        await hubConnection.StartAsync();
+
+        NuGetPackageDownloadRequestModal.Show();
+
+        if (hubConnection.State == HubConnectionState.Connected)
+        {
+            requestInfo.Status = $"Connected, ready to download packages.";
+            StateHasChanged();
+        }
+        else
+        {
+            requestInfo.Status = $"Not connected, reopen this dialog window to retry.";
+            StateHasChanged();
+        }
+
+        await Task.Delay(500); // wait 0.5s
+
+        // send request to download
+        NuGetPackageInfo info = new NuGetPackageInfo { packageId = selectedPackageName, packageVersion = selectedPackageVersion };
+        RequestDownloadNuGetInfo request = new RequestDownloadNuGetInfo
+        {
+            packageList = new List<NuGetPackageInfo> { info },
+            preReleased = includePrereleased,
+            withDependency = includeDependency,
+            targetFramework = new List<string> { selectedTargetFrameworkName },
+            repository = repostoryURL
+        };
+
+        await hubConnection.SendAsync("RequestToDownload", request);
+        requestInfo.Status = $"Send download request.";
+        StateHasChanged();
+    }
+
+    private void HideModal()
+    {
+        NuGetPackageDownloadRequestModal.Hide();
+    }
+
+    public bool IsConnected =>
+        hubConnection.State == HubConnectionState.Connected;
+
+    public void Dispose()
+    {
+        _ = hubConnection.DisposeAsync();
+    }
+}

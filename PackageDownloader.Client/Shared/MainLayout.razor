@@ -1,0 +1,21 @@
+﻿@inherits LayoutComponentBase
+
+<Layout>
+    <LayoutHeader>
+        <NavMenu />
+    </LayoutHeader>
+    <LayoutContent>
+        <Row>
+            <Column ColumnSize="ColumnSize.Is2">
+            </Column>
+            <Column ColumnSize="ColumnSize.Is8">
+                @Body
+            </Column>
+            <Column ColumnSize="ColumnSize.Is2">
+            </Column>
+        </Row>
+    </LayoutContent>
+    <LayoutFooter>
+        Footer
+    </LayoutFooter>
+</Layout>

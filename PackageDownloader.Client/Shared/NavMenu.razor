@@ -1,0 +1,31 @@
+﻿<Bar Breakpoint="Breakpoint.Desktop"
+     Background="Background.Dark"
+     ThemeContrast="ThemeContrast.Dark">
+    <BarBrand>
+        <a class="navbar-brand" href="">Package Downloader</a>
+    </BarBrand>
+    <Blazorise.BarToggler></Blazorise.BarToggler>
+    <BarMenu>
+        <BarStart>
+            <BarItem>
+                <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
+                    <span class="fas fa-home" aria-hidden="true"></span> Home
+                </NavLink>
+            </BarItem>
+            <BarItem>
+                <NavLink class="nav-link" href="nuget-download">
+                    <span class="fas fa-download" aria-hidden="true"></span> NuGet Package
+                </NavLink>
+            </BarItem>
+            <BarItem>
+                <NavLink class="nav-link" href="npm-download">
+                    <span class="fab fa-npm" aria-hidden="true"></span> NPM Package
+                </NavLink>
+            </BarItem>
+        </BarStart>
+        <BarEnd>
+            <BarItem>
+            </BarItem>
+        </BarEnd>
+    </BarMenu>
+</Bar>
