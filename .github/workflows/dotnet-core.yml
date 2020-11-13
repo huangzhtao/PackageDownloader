@@ -34,6 +34,7 @@ jobs:
         passphrase: ${{ secrets.REMOTE_SSH_KEY_PASS }}
         source: deploy
         target: ${{ secrets.REMOTE_TARGET }}
+        rm: true
     - name: Run SSH Command
       uses: appleboy/ssh-action@v0.1.3
       with:
