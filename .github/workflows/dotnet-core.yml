@@ -31,6 +31,7 @@ jobs:
         host: ${{ secrets.REMOTE_HOST }}
         username: ${{ secrets.REMOTE_USER }}
         key: ${{ secrets.REMOTE_SSH_KEY }}
+        passphrase: ${{ secrets.REMOTE_SSH_KEY_PASS }}
         source: deploy
         target: ${{ secrets.REMOTE_TARGET }}
     - name: Run SSH Command
@@ -39,4 +40,5 @@ jobs:
         host: ${{ secrets.REMOTE_HOST }}
         username: ${{ secrets.REMOTE_USER }}
         key: ${{ secrets.REMOTE_SSH_KEY }}
+        passphrase: ${{ secrets.REMOTE_SSH_KEY_PASS }}
         script: sudo service PackageDownload restart
