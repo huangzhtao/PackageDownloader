@@ -1,9 +1,8 @@
-﻿@page "/"
-@page "/nuget-download"
+@page "/npm-download"
 
 <Row>
     <Column ColumnSize="ColumnSize.Is12">
-        <h3>NuGet Package</h3>
+        <h3>NPM Package</h3>
     </Column>
 </Row>
 <Row>
@@ -41,7 +40,7 @@
 <Row>
     <Column ColumnSize="ColumnSize.Is6">
         <Blazorise.Field Horizontal="true">
-            <Blazorise.FieldLabel ColumnSize="ColumnSize.Is5">Include Pre-released:</Blazorise.FieldLabel>
+            <Blazorise.FieldLabel ColumnSize="ColumnSize.Is5">Pre-released:</Blazorise.FieldLabel>
             <Blazorise.FieldBody ColumnSize="ColumnSize.Is7">
                 <Blazorise.Switch TValue="bool" @bind-Checked="@includePrereleased">@includePrereleased</Blazorise.Switch>
             </Blazorise.FieldBody>
@@ -49,7 +48,7 @@
     </Column>
     <Column ColumnSize="ColumnSize.Is6">
         <Blazorise.Field Horizontal="true">
-            <Blazorise.FieldLabel ColumnSize="ColumnSize.Is5">Include Dependency:</Blazorise.FieldLabel>
+            <Blazorise.FieldLabel ColumnSize="ColumnSize.Is5">Dependency:</Blazorise.FieldLabel>
             <Blazorise.FieldBody ColumnSize="ColumnSize.Is7">
                 <Blazorise.Switch TValue="bool" @bind-Checked="@includeDependency">@includeDependency</Blazorise.Switch>
             </Blazorise.FieldBody>
@@ -59,20 +58,16 @@
 <Row>
     <Column ColumnSize="ColumnSize.Is6">
         <Blazorise.Field>
-            <FieldLabel>Repostory:</FieldLabel>
-            <TextEdit @bind-Text="@repostoryURL" Placeholder="Input repostory url..." />
+            <FieldLabel>Registry:</FieldLabel>
+            <TextEdit Text="@repostoryURL" TextChanged="@OnRepostoryURLChanged" Placeholder="Input registry url..." />
         </Blazorise.Field>
     </Column>
     <Column ColumnSize="ColumnSize.Is6">
         <Blazorise.Field>
-            <FieldLabel>Target:</FieldLabel>
-            <Autocomplete Data="@allTargetFrameworkNameArray"
-                          TextField="@((item)=>item)"
-                          ValueField="@((item)=>item)"
-                          Filter="AutocompleteFilter.Contains"
-                          SelectedValue="@selectedTargetFrameworkName"
-                          SelectedValueChanged="@TargetFrameworkHandler"
-                          Placeholder="Input target framework..." />
+            <Blazorise.FieldLabel>Dev-Dependency:</Blazorise.FieldLabel>
+            <Blazorise.FieldBody>
+                <Blazorise.Switch TValue="bool" CheckedChanged="@OnDevDependencyChanged">@includeDevDependencyText</Blazorise.Switch>
+            </Blazorise.FieldBody>
         </Blazorise.Field>
     </Column>
 </Row>
@@ -92,7 +87,7 @@
     </Column>
 </Row>
 
-<Modal @ref="NuGetPackageDownloadRequestModal">
+<Modal @ref="NpmPackageDownloadRequestModal">
     <ModalBackdrop />
     <Blazorise.ModalContent>
         <ModalHeader>
@@ -133,7 +128,7 @@
 </Modal>
 
 @using System.Net.Http
-@using PackageDownloader.Shared.NuGet;
+@using PackageDownloader.Shared.Npm;
 @using PackageDownloader.Shared.Response;
 @inject HttpClient Http
 @using Microsoft.AspNetCore.SignalR.Client
@@ -141,7 +136,7 @@
 @*@implements IDisposable*@
 
 @code {
-    private const string NuGetServiceURL = "api/NuGet/";
+    private const string NpmServiceURL = "api/Npm/";
     private const string HubURL = "DownloadPackageHub";
     private const int MaxMessageLength = 20;
 
@@ -159,11 +154,12 @@
     // for Include Dependency
     private bool includeDependency = true;
 
-    // for Target Framework
-    private string selectedTargetFrameworkName;
+    // for Include Dev Dependency
+    private bool includeDevDependency = false;
+    private string includeDevDependencyText = "";
 
     // for Repostory
-    private string repostoryURL = "https://api.nuget.org/v3/index.json";
+    private string repostoryURL = "https://registry.npmjs.org";
 
     // for signalr
     private HubConnection hubConnection;
@@ -204,8 +200,10 @@
 
     protected override async Task OnInitializedAsync()
     {
-        searchedReturnPackageNameArray = await Http.GetFromJsonAsync<IEnumerable<string>>($"{NuGetServiceURL}SearchPackage");
+        searchedReturnPackageNameArray = await Http.GetFromJsonAsync<IEnumerable<string>>($"{NpmServiceURL}SearchPackage");
         selectedPackageVersionArray = new List<string> { "No Package" };
+
+        includeDevDependencyText = includeDevDependency.ToString();
     }
 
     // Package Search
@@ -215,9 +213,28 @@
         if (val != null && val.Length >= 2)
         {
             searchedReturnPackageNameArray = await Http.GetFromJsonAsync<IEnumerable<string>>(
-                $"{NuGetServiceURL}SearchPackage?searchName={val}&repostoryUrl={repostoryURL}&includePrerelease={includePrereleased}");
+                $"{NpmServiceURL}SearchPackage?searchName={val}&repostoryUrl={repostoryURL}&includePrerelease={includePrereleased}");
             StateHasChanged();
         }
+    }
+
+    // reigistry URL changed
+    private void OnRepostoryURLChanged(string value)
+    {
+        repostoryURL = value;
+        // There can't be "/" of the last
+        if (value.EndsWith("/"))
+        {
+            repostoryURL = value.Substring(0, value.Length - 1);
+            StateHasChanged();
+        }
+    }
+
+    // Dev dependency changed
+    private void OnDevDependencyChanged(bool value)
+    {
+        includeDevDependency = value;
+        includeDevDependencyText = includeDevDependency ? $"{value}, it will take a very long time to download." : value.ToString();
     }
 
     private async Task PackageSearchHandler(object newValue)
@@ -226,7 +243,7 @@
 
         // update version
         selectedPackageVersionArray = await Http.GetFromJsonAsync<IEnumerable<string>>(
-            $"{NuGetServiceURL}GetPackageVersion?packageId={newValue}&repostoryUrl={repostoryURL}&includePrerelease={includePrereleased}");
+            $"{NpmServiceURL}GetPackageVersion?packageId={newValue}&repostoryUrl={repostoryURL}&includePrerelease={includePrereleased}");
         if (selectedPackageVersionArray != null && selectedPackageVersionArray.Count() >= 0)
         {
             selectedPackageVersion = selectedPackageVersionArray.First();
@@ -238,18 +255,6 @@
         StateHasChanged();
     }
 
-    static IEnumerable<string> allTargetFrameworkNameArray = new List<string>
-{
-        "ALL",
-        "NETFramework2.0",".NETFramework3.5","NETFramework4.0",".NETFramework4.5",".NETFramework4.6.1",
-        ".NETStandard1.0",".NETStandard1.3",".NETStandard2.0",".NETStandard2.1","net5.0"
-    };
-
-    private void TargetFrameworkHandler(object newValue)
-    {
-        selectedTargetFrameworkName = newValue.ToString();
-    }
-
     // for version
     private void PackageVersionSelectHandler(object newValue)
     {
@@ -257,7 +262,7 @@
     }
 
     // reference to the modal component
-    private Modal NuGetPackageDownloadRequestModal;
+    private Modal NpmPackageDownloadRequestModal;
 
     private void ViewLast()
     {
@@ -265,7 +270,7 @@
         {
             requestInfo = InitRequestInfo();
         }
-        NuGetPackageDownloadRequestModal.Show();
+        NpmPackageDownloadRequestModal.Show();
     }
 
     private async Task SubmitRequest()
@@ -314,7 +319,7 @@
 
         await hubConnection.StartAsync();
 
-        NuGetPackageDownloadRequestModal.Show();
+        NpmPackageDownloadRequestModal.Show();
 
         if (hubConnection.State == HubConnectionState.Connected)
         {
@@ -330,24 +335,24 @@
         await Task.Delay(500); // wait 0.5s
 
         // send request to download
-        NuGetPackageInfo info = new NuGetPackageInfo { packageId = selectedPackageName, packageVersion = selectedPackageVersion };
-        RequestDownloadNuGetInfo request = new RequestDownloadNuGetInfo
+        NpmPackageInfo info = new NpmPackageInfo { packageId = selectedPackageName, packageVersion = selectedPackageVersion };
+        RequestDownloadNpmInfo request = new RequestDownloadNpmInfo
         {
-            packageList = new List<NuGetPackageInfo> { info },
+            packageList = new List<NpmPackageInfo> { info },
             preReleased = includePrereleased,
             withDependency = includeDependency,
-            targetFramework = new List<string> { selectedTargetFrameworkName },
+            withDevDependency = includeDevDependency,
             repository = repostoryURL
         };
 
-        await hubConnection.SendAsync("RequestToDownloadNuGet", request);
+        await hubConnection.SendAsync("RequestToDownloadNpm", request);
         requestInfo.Status = $"Send download request.";
         StateHasChanged();
     }
 
     private void HideModal()
     {
-        NuGetPackageDownloadRequestModal.Hide();
+        NpmPackageDownloadRequestModal.Hide();
     }
 
     public bool IsConnected =>

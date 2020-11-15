@@ -16,6 +16,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PackageDownloader.Server", 
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PackageDownloader.Shared", "PackageDownloader.Shared\PackageDownloader.Shared.csproj", "{E849DA1E-3BE7-4486-A305-BD17706F4EDE}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SemVer", "SemVer\SemVer.csproj", "{2434EFD8-AE22-4FD4-BB04-6A4BA8BEC730}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -34,6 +36,10 @@ Global
 		{E849DA1E-3BE7-4486-A305-BD17706F4EDE}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E849DA1E-3BE7-4486-A305-BD17706F4EDE}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{E849DA1E-3BE7-4486-A305-BD17706F4EDE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2434EFD8-AE22-4FD4-BB04-6A4BA8BEC730}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2434EFD8-AE22-4FD4-BB04-6A4BA8BEC730}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2434EFD8-AE22-4FD4-BB04-6A4BA8BEC730}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2434EFD8-AE22-4FD4-BB04-6A4BA8BEC730}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

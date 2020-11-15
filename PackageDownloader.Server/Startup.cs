@@ -11,6 +11,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using PackageDownloader.NuGet;
 using PackageDownloader.Server.Hubs;
+using PackageDownloader.Server.Services.Npm;
 using PackageDownloader.Service.Compress;
 using PackageDownloader.Service.Interface;
 
@@ -24,6 +25,8 @@ namespace PackageDownloader.Server
         }
 
         public IConfiguration Configuration { get; }
+
+        public delegate IPackageService ServiceResolver(string key);
 
         // This method gets called by the runtime. Use this method to add services to the container.
         // For more information on how to configure your application, visit https://go.microsoft.com/fwlink/?LinkID=398940
@@ -39,7 +42,21 @@ namespace PackageDownloader.Server
             });
 
             services.AddScoped<ICompressService, CompressService>();
-            services.AddScoped<IPackageService, NuGetService>();
+            services.AddScoped<NuGetService>();
+            services.AddScoped<NpmService>();
+
+            services.AddScoped<ServiceResolver>(serviceProvider => key =>
+            {
+                switch (key)
+                {
+                    case "NuGetService":
+                        return serviceProvider.GetService<NuGetService>();
+                    case "NpmService":
+                        return serviceProvider.GetService<NpmService>();
+                    default:
+                        throw new KeyNotFoundException();
+                }
+            });
 
             services.AddSwaggerGen();
         }

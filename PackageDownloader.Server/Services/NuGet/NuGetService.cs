@@ -8,6 +8,7 @@ using NuGet.Protocol;
 using NuGet.Protocol.Core.Types;
 using NuGet.Versioning;
 using PackageDownloader.Server.Hubs;
+using PackageDownloader.Server.Utils;
 using PackageDownloader.Service.Compress;
 using PackageDownloader.Service.Interface;
 using PackageDownloader.Shared;
@@ -29,6 +30,12 @@ namespace PackageDownloader.NuGet
         private readonly IHostEnvironment _environment;
         private readonly IConfiguration _configuration;
 
+        Queue<PackageInfo> _downloadQueue = new Queue<PackageInfo>();
+        List<string> _cacheDownloadedFileName = new List<string>();
+
+        // Configure
+        int MessageFrequency = 10; // default freq every 10 download message send to client 
+
         private class PackageInfo
         {
             public string packageId { get; set; }
@@ -41,6 +48,9 @@ namespace PackageDownloader.NuGet
             _compressService = compressService;
             _environment = environment;
             _configuration = configuration;
+
+            // get configure value
+            MessageFrequency = _configuration.GetValue<int>("MessageFrequency");
         }
 
         public async Task<IEnumerable<string>> SearchPackageAsync(string searchPackageName, string repositoryUrl, bool includePrerelease)
@@ -79,11 +89,11 @@ namespace PackageDownloader.NuGet
 
             if (includePrerelease == true)
             {
-                return versions.OrderByDescending(x => x).Select(x => x.ToNormalizedString()).AsEnumerable<string>();
+                return versions.OrderByDescending(x => x).Select(x => x.ToNormalizedString()).AsEnumerable();
             }
             else
             {
-                return versions.Where(x => x.IsPrerelease == false).OrderByDescending(x => x).Select(x => x.ToNormalizedString()).AsEnumerable<string>();
+                return versions.Where(x => x.IsPrerelease == false).OrderByDescending(x => x).Select(x => x.ToNormalizedString()).AsEnumerable();
             }
             
         }
@@ -124,7 +134,7 @@ namespace PackageDownloader.NuGet
                 Directory.CreateDirectory(_outputDirectory);
             }
 
-            string connectionSubName = $"{connectionID}-{DateTime.Now:yyyymmddHHmmss}";
+            string connectionSubName = $"nuget-{connectionID}-{DateTime.Now:yyyymmddHHmmss}";
             string connectionDirectory = $"{_outputDirectory}/{connectionSubName}";
             Directory.CreateDirectory(connectionDirectory);
 
@@ -132,9 +142,6 @@ namespace PackageDownloader.NuGet
             response.payload.Clear();
             response.payload.Add("Resource", $"{connectionSubName} created.");
             await _downloadHubContext.Clients.Client(connectionID).Response(response);
-
-            Queue<PackageInfo> _downloadQueue = new Queue<PackageInfo>();
-            List<string> _cacheDownloadedFileName = new List<string>();
 
             ILogger logger = NullLogger.Instance;
             CancellationToken cancellationToken = CancellationToken.None;
@@ -182,15 +189,16 @@ namespace PackageDownloader.NuGet
             {
                 PackageInfo package = _downloadQueue.Dequeue();
 
-                string packageFilePath = $"{connectionDirectory}/{package.packageId}.{package.packageVersion}.nupkg";
+                string validFileName = FileUtil.GetValidFileName(package.packageId);
+                string packageFilePath = $"{connectionDirectory}/{validFileName}.{package.packageVersion}.nupkg";
 
-                if (_cacheDownloadedFileName.Contains(packageFilePath))
+                if (_cacheDownloadedFileName.Contains($"{package.packageId}-{package.packageVersion}"))
                 {
                     continue;
                 }
                 else
                 {
-                    _cacheDownloadedFileName.Add(packageFilePath);
+                    _cacheDownloadedFileName.Add($"{package.packageId}-{package.packageVersion}");
                 }
 
                 using FileStream packageStream = new FileStream(packageFilePath, FileMode.Create);
@@ -204,6 +212,24 @@ namespace PackageDownloader.NuGet
                     cancellationToken);
 
                 download_counter++;
+
+                // starting
+                if (download_counter == 1)
+                {
+                    // send message
+                    response.payload.Clear();
+                    response.payload.Add("DownloadCounter", $"starting...");
+                    await _downloadHubContext.Clients.Client(connectionID).Response(response);
+                }
+
+                // check if send message is needed
+                if (download_counter % MessageFrequency == 0)
+                {
+                    // send message
+                    response.payload.Clear();
+                    response.payload.Add("DownloadCounter", $"{download_counter}, {((float)download_counter / (float)(download_counter + _downloadQueue.Count)) * 100.0f}%");
+                    await _downloadHubContext.Clients.Client(connectionID).Response(response);
+                }
 
                 Console.WriteLine($"Downloaded package {package.packageId} {package.packageVersion}");
 
@@ -248,20 +274,11 @@ namespace PackageDownloader.NuGet
                         _downloadQueue.Enqueue(dependencyPackage);
                     }
                 }
-
-                // check if send message is needed
-                if (download_counter % 10 == 0)
-                {
-                    // send message
-                    response.payload.Clear();
-                    response.payload.Add("DownloadCounter", download_counter.ToString());
-                    await _downloadHubContext.Clients.Client(connectionID).Response(response);
-                }
             }
 
             // send message
             response.payload.Clear();
-            response.payload.Add("DownloadCounter", download_counter.ToString());
+            response.payload.Add("DownloadCounter", $"{download_counter}, {((float)download_counter / (float)(download_counter + _downloadQueue.Count)) * 100.0f}%");
             await _downloadHubContext.Clients.Client(connectionID).Response(response);
 
             string zipFileName = $"{_outputDirectory}/{connectionSubName}.zip";
@@ -269,7 +286,7 @@ namespace PackageDownloader.NuGet
 
             if (result == true)
             {
-                string readableSize = getFileHumanReadableSize(zipFileName);
+                string readableSize = FileUtil.getFileHumanReadableSize(zipFileName);
                 // send message
                 response.payload.Clear();
                 response.payload.Add("CompressStatus", $"compressed ok, file sieze: {readableSize}.");
@@ -287,22 +304,6 @@ namespace PackageDownloader.NuGet
             Directory.Delete(connectionDirectory, true);
 
             return connectionSubName;
-        }
-
-        private string getFileHumanReadableSize(string filename)
-        {
-            string[] sizes = { "B", "KB", "MB", "GB", "TB" };
-            double len = new FileInfo(filename).Length;
-            int order = 0;
-            while (len >= 1024 && order < sizes.Length - 1)
-            {
-                order++;
-                len = len / 1024;
-            }
-
-            // Adjust the format string to your preferences. For example "{0:0.#}{1}" would
-            // show a single decimal place, and no space.
-            return String.Format("{0:0.##} {1}", len, sizes[order]);
         }
     }
 }
