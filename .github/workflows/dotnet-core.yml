@@ -24,7 +24,7 @@ jobs:
     - name: Test
       run: dotnet test --no-restore --verbosity normal
     - name: Dotnet Publish
-      run: dotnet publish --configuration Release -o deploy
+      run: dotnet publish --configuration Release -o deploy -f netcoreapp3.1
     - name: Copy via ssh
       uses: appleboy/scp-action@v0.1.1
       with:
