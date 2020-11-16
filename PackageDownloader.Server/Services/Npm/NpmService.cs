@@ -32,6 +32,7 @@ namespace PackageDownloader.Server.Services.Npm
         {
             public string packageId { get; set; }
             public SemVer.Version packageVersion { get; set; }
+            public int depth { get; set; }
         }
 
         Queue<PackageInfo> _downloadQueue = new Queue<PackageInfo>();
@@ -256,6 +257,7 @@ namespace PackageDownloader.Server.Services.Npm
                                                                               info.preReleased, info.repository);
                 if (packageInfo != null)
                 {
+                    packageInfo.depth = 0;
                     _downloadQueue.Enqueue(packageInfo);
                     _cacheForPackageVersion.Add(setValue);
                 }
@@ -348,8 +350,12 @@ namespace PackageDownloader.Server.Services.Npm
                                                                                       info.preReleased, info.repository);
                         if (packageInfo != null)
                         {
-                            _downloadQueue.Enqueue(packageInfo);
-                            _cacheForPackageVersion.Add(setValue);
+                            packageInfo.depth = package.depth + 1;
+                            if (info.dependencyDepth != 0 && packageInfo.depth <= info.dependencyDepth)
+                            {
+                                _downloadQueue.Enqueue(packageInfo);
+                                _cacheForPackageVersion.Add(setValue);
+                            }
                         }
                     }
                 }
@@ -379,8 +385,12 @@ namespace PackageDownloader.Server.Services.Npm
                                                                                       info.preReleased, info.repository);
                         if (packageInfo != null)
                         {
-                            _downloadQueue.Enqueue(packageInfo);
-                            _cacheForPackageVersion.Add(setValue);
+                            packageInfo.depth = package.depth + 1;
+                            if (info.dependencyDepth != 0 && packageInfo.depth <= info.dependencyDepth)
+                            {
+                                _downloadQueue.Enqueue(packageInfo);
+                                _cacheForPackageVersion.Add(setValue);
+                            }
                         }
                     }
                 }
