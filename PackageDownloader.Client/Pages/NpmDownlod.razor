@@ -173,10 +173,10 @@
     private string includeDevDependencyText = "";
 
     // for Dependency depth
-    private int dependencyDepth = 5;
+    private int dependencyDepth = -1;
 
     // for Repostory
-        private string repostoryURL = "https://registry.npmjs.org";
+    private string repostoryURL = "https://registry.npmjs.org";
 
     // for signalr
     private HubConnection hubConnection;
@@ -251,7 +251,18 @@
     private void OnDevDependencyChanged(bool value)
     {
         includeDevDependency = value;
-        includeDevDependencyText = includeDevDependency ? $"{value}, it will take a very long time to download." : value.ToString();
+
+        if (includeDevDependency == true)
+        {
+            includeDevDependencyText = $"{value}, it may take a long time.";
+            dependencyDepth = 1;
+        }
+        else
+        {
+            includeDevDependencyText = value.ToString();
+            dependencyDepth = -1;
+        }
+
     }
 
     private async Task PackageSearchHandler(object newValue)
@@ -359,6 +370,7 @@
             preReleased = includePrereleased,
             withDependency = includeDependency,
             withDevDependency = includeDevDependency,
+            dependencyDepth = dependencyDepth,
             repository = repostoryURL
         };
 

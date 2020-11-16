@@ -133,7 +133,7 @@ namespace PackageDownloader.Server.Services.Npm
 
             if (bestMatchVersion == null)
             {
-                bestMatchVersion = versions.OrderByDescending(x => x).First();
+                bestMatchVersion = versions.OrderByDescending(x => x).FirstOrDefault();
             }
 
             return new PackageInfo { packageId = packageId, packageVersion = bestMatchVersion };
@@ -332,7 +332,7 @@ namespace PackageDownloader.Server.Services.Npm
                 }
 
                 Console.WriteLine("\nStart download dependencies:");
-                if (packageVerion.dependencies != null)
+                if (packageVerion.dependencies != null && (info.dependencyDepth == -1 || package.depth < info.dependencyDepth))
                 {
                     foreach (var dependencyGroup in packageVerion.dependencies)
                     {
@@ -351,7 +351,7 @@ namespace PackageDownloader.Server.Services.Npm
                         if (packageInfo != null)
                         {
                             packageInfo.depth = package.depth + 1;
-                            if (info.dependencyDepth != 0 && packageInfo.depth <= info.dependencyDepth)
+                            if (info.dependencyDepth == -1 || packageInfo.depth <= info.dependencyDepth)
                             {
                                 _downloadQueue.Enqueue(packageInfo);
                                 _cacheForPackageVersion.Add(setValue);
@@ -367,7 +367,7 @@ namespace PackageDownloader.Server.Services.Npm
                 }
 
                 Console.WriteLine("\nStart download dev dependencies:");
-                if (packageVerion.devDependencies != null)
+                if (packageVerion.devDependencies != null && (info.dependencyDepth == -1 || package.depth < info.dependencyDepth))
                 {
                     foreach (var dependencyGroup in packageVerion.devDependencies)
                     {
@@ -386,7 +386,7 @@ namespace PackageDownloader.Server.Services.Npm
                         if (packageInfo != null)
                         {
                             packageInfo.depth = package.depth + 1;
-                            if (info.dependencyDepth != 0 && packageInfo.depth <= info.dependencyDepth)
+                            if (info.dependencyDepth == -1 || packageInfo.depth <= info.dependencyDepth)
                             {
                                 _downloadQueue.Enqueue(packageInfo);
                                 _cacheForPackageVersion.Add(setValue);
