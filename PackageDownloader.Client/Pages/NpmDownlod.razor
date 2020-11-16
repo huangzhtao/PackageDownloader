@@ -62,11 +62,25 @@
             <TextEdit Text="@repostoryURL" TextChanged="@OnRepostoryURLChanged" Placeholder="Input registry url..." />
         </Blazorise.Field>
     </Column>
-    <Column ColumnSize="ColumnSize.Is6">
+    <Column ColumnSize="ColumnSize.Is3">
         <Blazorise.Field>
             <Blazorise.FieldLabel>Dev-Dependency:</Blazorise.FieldLabel>
             <Blazorise.FieldBody>
                 <Blazorise.Switch TValue="bool" CheckedChanged="@OnDevDependencyChanged">@includeDevDependencyText</Blazorise.Switch>
+            </Blazorise.FieldBody>
+        </Blazorise.Field>
+    </Column>
+    <Column ColumnSize="ColumnSize.Is3">
+        <Blazorise.Field>
+            <Blazorise.FieldLabel>Dependency Depth:</Blazorise.FieldLabel>
+            <Blazorise.FieldBody>
+                <Validation UsePattern="true">
+                    <NumericEdit @bind-Value="@dependencyDepth" Placeholder="Input number">
+                        <Feedback>
+                            <ValidationError>Pattern does not match!</ValidationError>
+                        </Feedback>
+                    </NumericEdit>
+                </Validation>
             </Blazorise.FieldBody>
         </Blazorise.Field>
     </Column>
@@ -158,8 +172,11 @@
     private bool includeDevDependency = false;
     private string includeDevDependencyText = "";
 
+    // for Dependency depth
+    private int dependencyDepth = 5;
+
     // for Repostory
-    private string repostoryURL = "https://registry.npmjs.org";
+        private string repostoryURL = "https://registry.npmjs.org";
 
     // for signalr
     private HubConnection hubConnection;

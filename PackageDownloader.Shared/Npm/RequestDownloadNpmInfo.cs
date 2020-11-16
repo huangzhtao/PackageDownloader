@@ -10,6 +10,7 @@ namespace PackageDownloader.Shared.Npm
         public bool preReleased { get; set; }
         public bool withDependency { get; set; }
         public bool withDevDependency { get; set; }
+        public int dependencyDepth { get; set; }
         public string repository { get; set; }
     }
 }
