@@ -18,7 +18,7 @@ using System.Net.Http;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
-namespace PackageDownloader.Server.Services.Docker
+namespace PackageDownloader.Server.Services.Container
 {
     public class ContainerService : IPackageService
     {
@@ -36,22 +36,12 @@ namespace PackageDownloader.Server.Services.Docker
 
         RestClient client = new RestClient();
 
-        // Configure
-        int MessageFrequency = 10; // default freq every 10 download message send to client 
-        private readonly string DefaultDockerRegistry;
-        private readonly int SearchSize;
-
         public ContainerService(IHubContext<DownloadPackageHub, IDownloadPackageHubClient> hubContext, ICompressService compressService, IHostEnvironment environment, IConfiguration configuration)
         {
             _downloadHubContext = hubContext;
             _compressService = compressService;
             _environment = environment;
             _configuration = configuration;
-
-            // get configure value
-            MessageFrequency = _configuration.GetValue<int>("MessageFrequency");
-            DefaultDockerRegistry = _configuration.GetSection("Docker").GetValue<string>("DefaultRepository");
-            SearchSize = _configuration.GetSection("Docker").GetValue<int>("SearchSize");
         }
 
         public Task<IEnumerable<string>> SearchPackageAsync(string searchPackageName, string repositoryUrl, bool includePrerelease)
@@ -83,7 +73,9 @@ namespace PackageDownloader.Server.Services.Docker
                 Directory.CreateDirectory(_outputDirectory);
             }
 
-            string connectionSubName = $"docker-{connectionID}-{DateTime.Now:yyyymmddHHmmss}";
+            string fileName = info.image.Replace("/", "-").Replace(":", "-");
+
+            string connectionSubName = $"container-{fileName}-{connectionID}-{DateTime.Now:yyyymmddHHmmss}";
 
             // send message
             response.payload.Clear();

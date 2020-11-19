@@ -102,7 +102,7 @@ namespace PackageDownloader.Server.Hubs
             response.payload.Add("Status", "request received.");
             await SendResponse(response);
 
-            _packageService = _serviceAccessor("DockerService");
+            _packageService = _serviceAccessor("ContainerService");
 
             string resourceName = await _packageService.DownloadPackageAsync(Context.ConnectionId, info);
             string downloadUrl = $"./download/file?name={resourceName}";
