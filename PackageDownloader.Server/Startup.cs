@@ -11,6 +11,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using PackageDownloader.NuGet;
 using PackageDownloader.Server.Hubs;
+using PackageDownloader.Server.Services.Container;
 using PackageDownloader.Server.Services.Npm;
 using PackageDownloader.Service.Compress;
 using PackageDownloader.Service.Interface;
@@ -44,6 +45,7 @@ namespace PackageDownloader.Server
             services.AddScoped<ICompressService, CompressService>();
             services.AddScoped<NuGetService>();
             services.AddScoped<NpmService>();
+            services.AddScoped<ContainerService>();
 
             services.AddScoped<ServiceResolver>(serviceProvider => key =>
             {
@@ -53,6 +55,8 @@ namespace PackageDownloader.Server
                         return serviceProvider.GetService<NuGetService>();
                     case "NpmService":
                         return serviceProvider.GetService<NpmService>();
+                    case "ContainerService":
+                        return serviceProvider.GetService<ContainerService>();
                     default:
                         throw new KeyNotFoundException();
                 }

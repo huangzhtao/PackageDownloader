@@ -101,7 +101,7 @@ namespace PackageDownloader.Server.Services.Container
             // docker save
             Process compiler2 = new Process();
             compiler2.StartInfo.FileName = "docker";
-            compiler2.StartInfo.Arguments = $"save -o {connectionSubName}.zip {info.image}";
+            compiler2.StartInfo.Arguments = $"save -o {_outputDirectory}/{connectionSubName}.zip {info.image}";
             compiler2.StartInfo.UseShellExecute = false;
             compiler2.StartInfo.RedirectStandardOutput = true;
             compiler2.OutputDataReceived += (sender, args) => Console.WriteLine("received output: {0}", args.Data);
@@ -109,7 +109,7 @@ namespace PackageDownloader.Server.Services.Container
             compiler2.BeginOutputReadLine();
             compiler2.WaitForExit();
 
-            string readableSize = FileUtil.getFileHumanReadableSize($"{connectionSubName}.zip");
+            string readableSize = FileUtil.getFileHumanReadableSize($"{_outputDirectory}/{connectionSubName}.zip");
             // send message
             response.payload.Clear();
             response.payload.Add("CompressStatus", $"compressed ok, file sieze: {readableSize}.");
