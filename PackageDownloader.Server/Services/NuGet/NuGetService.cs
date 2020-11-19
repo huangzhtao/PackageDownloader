@@ -290,7 +290,7 @@ namespace PackageDownloader.NuGet
                 // send message
                 response.payload.Clear();
                 response.payload.Add("CompressStatus", $"compressed ok, file sieze: {readableSize}.");
-                await _downloadHubContext.Clients.Client(connectionID).Response(response); ;
+                await _downloadHubContext.Clients.Client(connectionID).Response(response);
             }
             else
             {

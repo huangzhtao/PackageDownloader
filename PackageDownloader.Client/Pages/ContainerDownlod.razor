@@ -1,0 +1,212 @@
+@page "/container-download"
+
+<Row>
+    <Column ColumnSize="ColumnSize.Is12">
+        <h3>Docker Image</h3>
+    </Column>
+</Row>
+<Row>
+    <Column ColumnSize="ColumnSize.Is12">
+        <Blazorise.Field>
+            <FieldLabel>NAME[:TAG|@@DIGEST]</FieldLabel>
+            <TextEdit @bind-Text="@imageName" Placeholder="Input name." />
+        </Blazorise.Field>
+    </Column>
+</Row>
+<Divider />
+<Row>
+    <Column ColumnSize="ColumnSize.Is4">
+    </Column>
+    <Column ColumnSize="ColumnSize.Is2">
+        <Blazorise.Button Color="Color.Secondary" Clicked="@ViewLast">View Last</Blazorise.Button>
+    </Column>
+    <Column ColumnSize="ColumnSize.Is1">
+    </Column>
+    <Column ColumnSize="ColumnSize.Is1">
+        <Blazorise.Button Color="Color.Primary" Clicked="@SubmitRequest">Submit</Blazorise.Button>
+    </Column>
+    <Column ColumnSize="ColumnSize.Is4">
+    </Column>
+</Row>
+
+<Modal @ref="ContainerDownloadRequestModal">
+    <ModalBackdrop />
+    <Blazorise.ModalContent>
+        <ModalHeader>
+            <ModalTitle>Request Status</ModalTitle>
+            <Blazorise.CloseButton Clicked="@HideModal" />
+        </ModalHeader>
+        <ModalBody>
+            <Blazorise.Field>
+                <Blazorise.FieldLabel>Status: @requestInfo.Status</Blazorise.FieldLabel>
+            </Blazorise.Field>
+            <Blazorise.Field>
+                <Blazorise.FieldLabel>Resource: @requestInfo.Resource</Blazorise.FieldLabel>
+            </Blazorise.Field>
+            <Blazorise.Field>
+                <Blazorise.FieldLabel>Package downloaded: @requestInfo.DownloadCounter</Blazorise.FieldLabel>
+            </Blazorise.Field>
+            <Blazorise.Field>
+                <Blazorise.FieldLabel>Compress status: @requestInfo.CompressStatus</Blazorise.FieldLabel>
+            </Blazorise.Field>
+            <Blazorise.Field>
+                <Blazorise.FieldLabel>
+                    Download url:<Blazorise.Link To="@requestInfo.DownloadUrl" Title="download">@requestInfo.DownloadUrl</Blazorise.Link>
+                </Blazorise.FieldLabel>
+            </Blazorise.Field>
+            @if (requestInfo.OtherMessage != null)
+            {
+                <Blazorise.Field>
+                    <Blazorise.FieldLabel>
+                        Other Message: @requestInfo.OtherMessage
+                    </Blazorise.FieldLabel>
+                </Blazorise.Field>
+            }
+        </ModalBody>
+        <ModalFooter>
+            <Blazorise.Button Color="Color.Secondary" Clicked="@HideModal">Close</Blazorise.Button>
+        </ModalFooter>
+    </Blazorise.ModalContent>
+</Modal>
+
+@using System.Net.Http
+@using PackageDownloader.Shared.Container;
+@using PackageDownloader.Shared.Response;
+@inject HttpClient Http
+@using Microsoft.AspNetCore.SignalR.Client
+@inject NavigationManager NavigationManager
+@*@implements IDisposable*@
+
+@code {
+    private const string HubURL = "DownloadPackageHub";
+    private string imageName = "alpine:latest";
+
+    // for signalr
+    private HubConnection hubConnection;
+
+    // for request status
+    public class RequestInfo
+    {
+        public string Status { get; set; }
+        public string Resource { get; set; }
+        public string DownloadCounter { get; set; }
+        public string CompressStatus { get; set; }
+        public string DownloadUrl { get; set; }
+        public string OtherMessage { get; set; }
+    }
+
+    private RequestInfo requestInfo = new RequestInfo()
+    {
+        Status = "No Request",
+        Resource = "None",
+        DownloadCounter = "0",
+        CompressStatus = "None",
+        DownloadUrl = "#",
+        OtherMessage = null
+    };
+
+    private RequestInfo InitRequestInfo()
+    {
+        return new RequestInfo()
+        {
+            Status = "No Request",
+            Resource = "None",
+            DownloadCounter = "0",
+            CompressStatus = "None",
+            DownloadUrl = "#",
+            OtherMessage = null
+        };
+    }
+
+    // reference to the modal component
+    private Modal ContainerDownloadRequestModal;
+
+    private void ViewLast()
+    {
+        if (requestInfo == null)
+        {
+            requestInfo = InitRequestInfo();
+        }
+        ContainerDownloadRequestModal.Show();
+    }
+
+    private async Task SubmitRequest()
+    {
+        requestInfo = InitRequestInfo();
+
+        // for signalr - connect signalr
+        hubConnection = new HubConnectionBuilder()
+        .WithUrl(NavigationManager.ToAbsoluteUri(HubURL))
+        .Build();
+
+        hubConnection.On<string>("Message", (message) =>
+        {
+            requestInfo.OtherMessage = message;
+            StateHasChanged();
+        });
+
+        hubConnection.On<ServerResponse>("Response", (response) =>
+        {
+            foreach (var item in response.payload)
+            {
+                switch (item.Key)
+                {
+                    case "Status":
+                        requestInfo.Status = item.Value;
+                        break;
+                    case "Resource":
+                        requestInfo.Resource = item.Value;
+                        break;
+                    case "DownloadCounter":
+                        requestInfo.DownloadCounter = item.Value;
+                        break;
+                    case "CompressStatus":
+                        requestInfo.CompressStatus = item.Value;
+                        break;
+                    case "DownloadUrl":
+                        requestInfo.DownloadUrl = item.Value;
+                        break;
+                    default:
+                        requestInfo.OtherMessage = $"{item.Key}: { item.Value}";
+                        break;
+                }
+                StateHasChanged();
+            }
+        });
+
+        await hubConnection.StartAsync();
+
+        ContainerDownloadRequestModal.Show();
+
+        if (hubConnection.State == HubConnectionState.Connected)
+        {
+            requestInfo.Status = $"Connected, ready to download packages.";
+            StateHasChanged();
+        }
+        else
+        {
+            requestInfo.Status = $"Not connected, reopen this dialog window to retry.";
+            StateHasChanged();
+        }
+
+        await Task.Delay(500); // wait 0.5s
+
+        // send request to download
+        RequestDownloadContainerInfo request = new RequestDownloadContainerInfo
+        {
+            image = imageName
+        };
+
+        await hubConnection.SendAsync("RequestToDownloadContainer", request);
+        requestInfo.Status = $"Send download request.";
+        StateHasChanged();
+    }
+
+    private void HideModal()
+    {
+        ContainerDownloadRequestModal.Hide();
+    }
+
+    public bool IsConnected =>
+        hubConnection.State == HubConnectionState.Connected;
+}

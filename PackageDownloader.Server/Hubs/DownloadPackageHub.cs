@@ -4,6 +4,7 @@ using Newtonsoft.Json;
 using PackageDownloader.NuGet;
 using PackageDownloader.Service.Interface;
 using PackageDownloader.Shared;
+using PackageDownloader.Shared.Container;
 using PackageDownloader.Shared.Npm;
 using PackageDownloader.Shared.NuGet;
 using PackageDownloader.Shared.Response;
@@ -82,6 +83,26 @@ namespace PackageDownloader.Server.Hubs
             await SendResponse(response);
 
             _packageService = _serviceAccessor("NpmService");
+
+            string resourceName = await _packageService.DownloadPackageAsync(Context.ConnectionId, info);
+            string downloadUrl = $"./download/file?name={resourceName}";
+
+            response.payload.Clear();
+            response.payload.Add("Status", "download completed.");
+            response.payload.Add("DownloadUrl", downloadUrl);
+            await SendResponse(response);
+        }
+
+        public async Task RequestToDownloadContainer(RequestDownloadContainerInfo info)
+        {
+            ServerResponse response = new ServerResponse()
+            {
+                payload = new Dictionary<string, string>()
+            };
+            response.payload.Add("Status", "request received.");
+            await SendResponse(response);
+
+            _packageService = _serviceAccessor("DockerService");
 
             string resourceName = await _packageService.DownloadPackageAsync(Context.ConnectionId, info);
             string downloadUrl = $"./download/file?name={resourceName}";
