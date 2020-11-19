@@ -45,6 +45,7 @@ namespace PackageDownloader.Server
             services.AddScoped<ICompressService, CompressService>();
             services.AddScoped<NuGetService>();
             services.AddScoped<NpmService>();
+            services.AddScoped<ContainerService>();
 
             services.AddScoped<ServiceResolver>(serviceProvider => key =>
             {
