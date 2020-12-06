@@ -22,46 +22,26 @@ jobs:
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v1
+        
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+      
+      #- name: Login to DockerHub
+      #  uses: docker/login-action@v1
+      #  with:
+      #    username: ${{ secrets.DOCKERHUB_USERNAME }}
+      #    password: ${{ secrets.DOCKERHUB_TOKEN }}
+        
       - name: Build and push Docker images
-        # You may pin to the exact commit or the version.
-        # uses: docker/build-push-action@0db984c1826869dcd0740ff26ff75ff543238fd9
-        uses: docker/build-push-action@v2.2.1
+        uses: docker/build-push-action@v2
         with:
-          # Builder instance
-          #builder: # optional
-          # Build's context is the set of files located in the specified PATH or URL
-          #context: # optional
-          # Path to the Dockerfile
-          file: ./Dockerfile # optional, default is ./Dockerfile
-          # List of build-time variables
-          #build-args: # optional
-          # List of metadata for an image
-          #labels: # optional
-          # List of tags
-          #tags: # optional
-          # Always attempt to pull a newer version of the image
-          #pull: # optional, default is false
-          # Sets the target stage to build
-          #target: # optional
-          # List of extra privileged entitlement (eg. network.host,security.insecure)
-          #allow: # optional
-          # Do not use cache when building the image
-          #no-cache: # optional, default is false
-          # List of target platforms for build
-          #platforms: # optional
-          # Load is a shorthand for --output=type=docker
-          #load: # optional, default is false
-          # Push is a shorthand for --output=type=registry
-          #push: # optional, default is false
-          # List of output destinations (format: type=local,dest=path)
-          #outputs: # optional
-          # List of external cache sources for buildx (eg. user/app:cache, type=local,src=path/to/dir)
-          #cache-from: # optional
-          # List of cache export destinations for buildx (eg. user/app:cache, type=local,dest=path/to/dir)
-          #cache-to: # optional
-          # List of secrets to expose to the build (eg. key=value, GIT_AUTH_TOKEN=mytoken)
-          #secrets: # optional
-          # GitHub Token used to authenticate against a repository for Git context
-          #github-token: # optional, default is ${{ github.token }}
-          # List of SSH agent socket or keys to expose to the build
-          #ssh: # optional
+          context: .
+          file: ./Dockerfile
+          platforms: linux/amd64
+          #push: true
+          #tags: user/app:latest
