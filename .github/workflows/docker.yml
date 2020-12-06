@@ -44,4 +44,4 @@ jobs:
           file: PackageDownloader.Server/Dockerfile
           platforms: linux/amd64
           push: true
-          tags: user/app:latest
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/package-downloader:latest
