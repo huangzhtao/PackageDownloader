@@ -23,6 +23,33 @@ namespace PackageDownloader.Server.Controllers
         }
 
         [HttpGet]
+        public List<string> ShowDownloadedFile(string key)
+        {
+            if (key != DateTime.Now.ToString("yyyy-MM-dd"))
+            {
+                return null;
+            }
+
+            string _outputDirectory = $"{_environment.ContentRootPath}/wwwroot/{_configuration.GetValue<string>("DownloadPath")}";
+
+            List<string> showFiles = new List<string>();
+            DirectoryInfo dir = new DirectoryInfo(_outputDirectory);
+            FileSystemInfo[] fileinfo = dir.GetFileSystemInfos();
+            foreach (FileSystemInfo i in fileinfo)
+            {
+                if (i is DirectoryInfo)
+                {
+                    showFiles.Add($"{i.Name}/");
+                }
+                else
+                {
+                    showFiles.Add(i.Name);
+                }
+            }
+            return showFiles;
+        }
+
+        [HttpPost]
         public List<string> DeleteDownloadedFile(string key)
         {
             if (key != DateTime.Now.ToString("yyyy-MM-dd"))
@@ -41,10 +68,12 @@ namespace PackageDownloader.Server.Controllers
                 {
                     DirectoryInfo subdir = new DirectoryInfo(i.FullName);
                     subdir.Delete(true);
+                    deletedFiles.Add($"{i.Name}/");
                 }
                 else
                 {
                     File.Delete(i.FullName);
+                    deletedFiles.Add(i.Name);
                 }
             }
             return deletedFiles;
