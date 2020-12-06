@@ -53,6 +53,7 @@ jobs:
           key: ${{ secrets.REMOTE_SSH_KEY }}
           passphrase: ${{ secrets.REMOTE_SSH_KEY_PASS }}
           script: |
-            /snap/bin/docker stop PackageDownloader && docker rm -f PackageDownloader
-            /snap/bin/docker pull ${{ secrets.DOCKERHUB_USERNAME }}/package-downloader:latest
-            /snap/bin/docker run -d -p 5000:80 -v /var/run/docker.sock:/var/run/docker.sock --restart=always --name PackageDownloader ${{ secrets.DOCKERHUB_USERNAME }}/package-downloader:latest
+            docker stop PackageDownloader && docker rm -f PackageDownloader
+            docker pull ${{ secrets.DOCKERHUB_USERNAME }}/package-downloader:latest
+            docker rmi $(docker images | grep "^<none>" | awk "{print $3}")
+            docker run -d -p 5000:80 -v /var/run/docker.sock:/var/run/docker.sock --restart=always --name PackageDownloader ${{ secrets.DOCKERHUB_USERNAME }}/package-downloader:latest
