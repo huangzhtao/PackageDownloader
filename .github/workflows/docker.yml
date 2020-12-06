@@ -43,5 +43,5 @@ jobs:
           context: .
           file: PackageDownloader.Server/Dockerfile
           platforms: linux/amd64
-          #push: true
-          #tags: user/app:latest
+          push: true
+          tags: user/app:latest
