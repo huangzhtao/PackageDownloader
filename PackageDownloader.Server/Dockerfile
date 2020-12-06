@@ -19,7 +19,18 @@ RUN dotnet build "PackageDownloader.Server.csproj" -c Release -o /app/build
 FROM build AS publish
 RUN dotnet publish "PackageDownloader.Server.csproj" -c Release -o /app/publish
 
-FROM base AS final
+FROM base AS docker-base
+RUN apt-get update -qq && apt-get install -qqy \
+    apt-transport-https \
+    ca-certificates \
+    curl \
+    lxc \
+    iptables
+    
+# Install Docker from Docker Inc. repositories.
+RUN curl -sSL https://get.docker.com/ | sh
+
+FROM docker-base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
 ENTRYPOINT ["dotnet", "PackageDownloader.Server.dll"]
