@@ -25,6 +25,8 @@
         <Blazorise.Field>
             <FieldLabel>Version:</FieldLabel>
             <SelectList Data="@selectedPackageVersionArray"
+                        TItem="string"
+                        TValue="string"
                         TextField="@((item)=>item)"
                         ValueField="@((item)=>item)"
                         SelectedValue="@selectedPackageVersion"
@@ -241,7 +243,7 @@
 {
         "ALL",
         "NETFramework2.0",".NETFramework3.5","NETFramework4.0",".NETFramework4.5",".NETFramework4.6.1",
-        ".NETStandard1.0",".NETStandard1.3",".NETStandard2.0",".NETStandard2.1","net5.0"
+        ".NETStandard1.0",".NETStandard1.3",".NETStandard2.0",".NETStandard2.1","netcoreapp3.1","net5.0"
     };
 
     private void TargetFrameworkHandler(object newValue)
@@ -250,7 +252,7 @@
     }
 
     // for version
-    private void PackageVersionSelectHandler(object newValue)
+    private void PackageVersionSelectHandler(string newValue)
     {
         selectedPackageVersion = newValue.ToString();
     }

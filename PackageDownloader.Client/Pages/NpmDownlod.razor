@@ -24,6 +24,8 @@
         <Blazorise.Field>
             <FieldLabel>Version:</FieldLabel>
             <SelectList Data="@selectedPackageVersionArray"
+                        TItem="string"
+                        TValue="string"
                         TextField="@((item)=>item)"
                         ValueField="@((item)=>item)"
                         SelectedValue="@selectedPackageVersion"
@@ -283,7 +285,7 @@
     }
 
     // for version
-    private void PackageVersionSelectHandler(object newValue)
+    private void PackageVersionSelectHandler(string newValue)
     {
         selectedPackageVersion = newValue.ToString();
     }
