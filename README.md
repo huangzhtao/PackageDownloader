@@ -1,4 +1,4 @@
-<h1 align="center">PackageDownloader</h1>
+<h1 align="center">Package Downloader</h1>
 <div align="center">
 一款用于网络隔离的开发环境情况下方便进行包及其依赖项下载的软件。
 </div>
