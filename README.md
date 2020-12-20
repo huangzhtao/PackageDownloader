@@ -1,13 +1,11 @@
 <h1 align="center">PackageDownloader</h1>
 <div align="center">
-一款用于网络隔离的开发环境情况下，方便进行包及其依赖项下载的软件。
+<div>一款用于网络隔离的开发环境情况下方便进行包及其依赖项下载的软件。</div>
 
 ![](https://img.shields.io/github/workflow/status/huangzhtao/PackageDownloader/Docker%20Build?style=flat-square)
 [![AntDesign](https://img.shields.io/badge/License-MIT-blue?style=flat-square)](https://github.com/huangzhtao/PackageDownloader/blob/master/LICENSE)
-
 </div>
 
-English | [简体中文](README-zh_CN.md)
 
 ## 🔨 系统功能
 
@@ -18,9 +16,17 @@ English | [简体中文](README-zh_CN.md)
 - 💎 Npm包下载
 - 🏗️ 容器镜像下载
 
-## 安装部署
+## 📌 安装部署
 
-## 使用说明
+支持Docker直接部署
+
+1. Docker pull
+docker push huangzhtao/package-downloader:latest
+
+2. Docker Run。由于需要在docker内使用docker命令，需要支持docker in docker。
+docker run -d -p 5000:80 -v /var/run/docker.sock:/var/run/docker.sock --restart=always --name PackageDownloader huangzhtao/package-downloader:latest
+
+## 👉 使用说明
 
 - NuGet包下载参数
 
@@ -50,7 +56,7 @@ English | [简体中文](README-zh_CN.md)
 1. 下载窗口将会展示下载的过程及状态。
 2. 下载完成后将在Download url部分展示下载的信息，点击即可下载完成的压缩包。
 
-## 技术架构
+## 🔗 使用技术
 
 - .Net 5
 - Blazorise
