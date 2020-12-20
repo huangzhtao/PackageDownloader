@@ -61,7 +61,7 @@ Docker deployment is supported.
 1. The download window will show the download process and status.
 2. After the download is completed, the download URL will be displayed. Click to download the completed compressed package.
 
-## 🔗 Technology
+## 🔗 Reference
 
 - [.Net 5](https://dotnet.microsoft.com/download/dotnet/5.0)
 - [Blazorise](https://github.com/stsrki/Blazorise)
