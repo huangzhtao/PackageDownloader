@@ -18,10 +18,10 @@
 支持Docker直接部署
 
 1. Docker pull
-docker push huangzhtao/package-downloader:latest
+`docker push huangzhtao/package-downloader:latest`
 
 2. Docker Run。由于需要在docker内使用docker命令，需要支持docker in docker。
-docker run -d -p 5000:80 -v /var/run/docker.sock:/var/run/docker.sock --restart=always --name PackageDownloader huangzhtao/package-downloader:latest
+`docker run -d -p 5000:80 -v /var/run/docker.sock:/var/run/docker.sock --restart=always --name PackageDownloader huangzhtao/package-downloader:latest`
 
 ## 👉 使用说明
 
