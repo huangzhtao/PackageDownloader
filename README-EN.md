@@ -3,6 +3,7 @@
 A toolkit for downloading packages and their dependencies for an isolated development environment.
 </div>
 
+English | [简体中文](README.md)
 
 ## 🔨 Feature
 
