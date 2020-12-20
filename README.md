@@ -30,10 +30,10 @@
 ![image](https://raw.githubusercontent.com/huangzhtao/PackageDownloader/main/assets/NuGet.png)
 
 1. Package： 输入要下载的包名，输入三个字符以上后自动连接Repostory进行搜索并提示。
-2. Version： 根据Repostory返回的版本提供用户进行选择，默认选择最新版本。
-3. Include Pre-released：是否包含预发布版本，默认选择“否”。
-4. Include Dependency：是否包含依赖，默认选择“是”。
-5. Repostory：服务器地址，默认为官方地址（https://api.nuget.org/v3/index.json ）。
+2. Version： 根据Repository返回的版本提供用户进行选择，默认选择最新版本。
+3. Pre-released：是否包含预发布版本，默认选择“否”。
+4. Dependency：是否包含依赖，默认选择“是”。
+5. Repository：服务器地址，默认为官方地址（https://api.nuget.org/v3/index.json ）。
 6. Target：依赖的目标框架版本，ALL或者输入需要的目标框架版本。
 
 - Npm包下载参数
