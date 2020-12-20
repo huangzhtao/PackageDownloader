@@ -1,9 +1,6 @@
 <h1 align="center">PackageDownloader</h1>
 <div align="center">
-<div>一款用于网络隔离的开发环境情况下方便进行包及其依赖项下载的软件。</div>
-
-![](https://img.shields.io/github/workflow/status/huangzhtao/PackageDownloader/Docker%20Build?style=flat-square)
-[![AntDesign](https://img.shields.io/badge/License-MIT-blue?style=flat-square)](https://github.com/huangzhtao/PackageDownloader/blob/master/LICENSE)
+一款用于网络隔离的开发环境情况下方便进行包及其依赖项下载的软件。
 </div>
 
 
