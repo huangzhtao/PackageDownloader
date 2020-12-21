@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using PackageDownloader.Server.Hubs;
 using PackageDownloader.Server.Utils;
 using PackageDownloader.Service.Interface;
@@ -26,6 +27,7 @@ namespace PackageDownloader.Server.Services.Container
         private readonly ICompressService _compressService;
         private readonly IHostEnvironment _environment;
         private readonly IConfiguration _configuration;
+        private readonly ILogger<ContainerService> _logger;
 
         private class PackageInfo
         {
@@ -36,12 +38,13 @@ namespace PackageDownloader.Server.Services.Container
 
         RestClient client = new RestClient();
 
-        public ContainerService(IHubContext<DownloadPackageHub, IDownloadPackageHubClient> hubContext, ICompressService compressService, IHostEnvironment environment, IConfiguration configuration)
+        public ContainerService(IHubContext<DownloadPackageHub, IDownloadPackageHubClient> hubContext, ICompressService compressService, IHostEnvironment environment, IConfiguration configuration, ILogger<ContainerService> logger)
         {
             _downloadHubContext = hubContext;
             _compressService = compressService;
             _environment = environment;
             _configuration = configuration;
+            _logger = logger;
         }
 
         public Task<IEnumerable<string>> SearchPackageAsync(string searchPackageName, string repositoryUrl, bool includePrerelease)

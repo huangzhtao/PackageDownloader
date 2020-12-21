@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using PackageDownloader.Server.Hubs;
 using PackageDownloader.Server.Services.Npm.Package;
 using PackageDownloader.Server.Services.Npm.Query;
@@ -27,6 +28,7 @@ namespace PackageDownloader.Server.Services.Npm
         private readonly ICompressService _compressService;
         private readonly IHostEnvironment _environment;
         private readonly IConfiguration _configuration;
+        private readonly ILogger<NpmService> _logger;
 
         private class PackageInfo
         {
@@ -47,12 +49,13 @@ namespace PackageDownloader.Server.Services.Npm
         private readonly string DefaultNpmRegistry;
         private readonly int SearchSize;
 
-        public NpmService(IHubContext<DownloadPackageHub, IDownloadPackageHubClient> hubContext, ICompressService compressService, IHostEnvironment environment, IConfiguration configuration)
+        public NpmService(IHubContext<DownloadPackageHub, IDownloadPackageHubClient> hubContext, ICompressService compressService, IHostEnvironment environment, IConfiguration configuration, ILogger<NpmService> logger)
         {
             _downloadHubContext = hubContext;
             _compressService = compressService;
             _environment = environment;
             _configuration = configuration;
+            _logger = logger;
 
             // get configure value
             MessageFrequency = _configuration.GetValue<int>("MessageFrequency");

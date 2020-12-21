@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using PackageDownloader.NuGet;
 using PackageDownloader.Service.Interface;
@@ -22,11 +23,13 @@ namespace PackageDownloader.Server.Hubs
         private IMemoryCache _cache;
         private ServiceResolver _serviceAccessor;
         private IPackageService _packageService;
+        private readonly ILogger<DownloadPackageHub> _logger;
 
-        public DownloadPackageHub(IMemoryCache memoryCache, ServiceResolver serviceAccessor)
+        public DownloadPackageHub(IMemoryCache memoryCache, ServiceResolver serviceAccessor, ILogger<DownloadPackageHub> logger)
         {
             _cache = memoryCache;
             _serviceAccessor = serviceAccessor;
+            _logger = logger;
         }
 
         public override Task OnConnectedAsync()
