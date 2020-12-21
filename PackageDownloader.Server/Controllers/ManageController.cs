@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -14,12 +15,13 @@ namespace PackageDownloader.Server.Controllers
     {
         private readonly IHostEnvironment _environment;
         private readonly IConfiguration _configuration;
+        private readonly ILogger<ManageController> _logger;
 
-        public ManageController(IHostEnvironment environment, IConfiguration configuration)
+        public ManageController(IHostEnvironment environment, IConfiguration configuration, ILogger<ManageController> logger)
         {
             _environment = environment;
             _configuration = configuration;
-
+            _logger = logger;
         }
 
         [HttpGet]

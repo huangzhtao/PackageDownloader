@@ -1,5 +1,6 @@
 ﻿using ICSharpCode.SharpZipLib.Checksum;
 using ICSharpCode.SharpZipLib.Zip;
+using Microsoft.Extensions.Logging;
 using PackageDownloader.Service.Interface;
 using System;
 using System.Collections.Generic;
@@ -10,7 +11,11 @@ namespace PackageDownloader.Service.Compress
 {
     public class CompressService: ICompressService
 	{
-        public bool CompressDirectory(string folderName, string zipedFileName)
+		private readonly ILogger<CompressService> _logger;
+
+		public CompressService(ILogger<CompressService> logger) => _logger = logger;
+
+		public bool CompressDirectory(string folderName, string zipedFileName)
         {
             if (!Directory.Exists(folderName))
             {
@@ -54,6 +59,7 @@ namespace PackageDownloader.Service.Compress
 			catch (Exception ex)
 			{
 				Console.WriteLine("Exception during processing {0}", ex);
+				_logger.LogError("Exception during processing {0}", ex);
 				return false;
 			}
 		}

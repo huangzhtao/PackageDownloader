@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using NuGet.Common;
 using NuGet.Frameworks;
 using NuGet.Packaging;
@@ -20,6 +21,7 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using ILogger = NuGet.Common.ILogger;
 
 namespace PackageDownloader.NuGet
 {
@@ -29,6 +31,7 @@ namespace PackageDownloader.NuGet
         private readonly ICompressService _compressService;
         private readonly IHostEnvironment _environment;
         private readonly IConfiguration _configuration;
+        private readonly ILogger<NuGetService> _logger;
 
         Queue<PackageInfo> _downloadQueue = new Queue<PackageInfo>();
         List<string> _cacheDownloadedFileName = new List<string>();
@@ -42,12 +45,13 @@ namespace PackageDownloader.NuGet
             public NuGetVersion packageVersion { get; set; }
         }
 
-        public NuGetService(IHubContext<DownloadPackageHub, IDownloadPackageHubClient> hubContext, ICompressService compressService, IHostEnvironment environment, IConfiguration configuration)
+        public NuGetService(IHubContext<DownloadPackageHub, IDownloadPackageHubClient> hubContext, ICompressService compressService, IHostEnvironment environment, IConfiguration configuration, ILogger<NuGetService> logger)
         {
             _downloadHubContext = hubContext;
             _compressService = compressService;
             _environment = environment;
             _configuration = configuration;
+            _logger = logger;
 
             // get configure value
             MessageFrequency = _configuration.GetValue<int>("MessageFrequency");

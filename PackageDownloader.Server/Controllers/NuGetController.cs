@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 using PackageDownloader.NuGet;
 using PackageDownloader.Service.Interface;
 using PackageDownloader.Shared.NuGet;
@@ -16,10 +17,12 @@ namespace PackageDownloader.Server.Controllers
     public class NuGetController : ControllerBase
     {
         private IPackageService _packageService;
+        private readonly ILogger<NuGetController> _logger;
 
-        public NuGetController(ServiceResolver serviceAccessor)
+        public NuGetController(ServiceResolver serviceAccessor, ILogger<NuGetController> logger)
         {
-            _packageService = serviceAccessor("NuGetService"); 
+            _packageService = serviceAccessor("NuGetService");
+            _logger = logger;
         }
 
         [HttpGet]

@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 using PackageDownloader.Service.Interface;
 using static PackageDownloader.Server.Startup;
 
@@ -14,10 +15,12 @@ namespace PackageDownloader.Server.Controllers
     public class NpmController : ControllerBase
     {
         private IPackageService _packageService;
+        private readonly ILogger<NpmController> _logger;
 
-        public NpmController(ServiceResolver serviceAccessor)
+        public NpmController(ServiceResolver serviceAccessor, ILogger<NpmController> logger)
         {
             _packageService = serviceAccessor("NpmService");
+            _logger = logger;
         }
 
         [HttpGet]
