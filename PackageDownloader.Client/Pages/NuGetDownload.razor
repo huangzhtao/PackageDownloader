@@ -43,7 +43,7 @@
 <Row>
     <Column ColumnSize="ColumnSize.Is6">
         <Blazorise.Field Horizontal="true">
-            <Blazorise.FieldLabel ColumnSize="ColumnSize.Is5">Include Pre-released:</Blazorise.FieldLabel>
+            <Blazorise.FieldLabel ColumnSize="ColumnSize.Is5">Pre-released:</Blazorise.FieldLabel>
             <Blazorise.FieldBody ColumnSize="ColumnSize.Is7">
                 <Blazorise.Switch TValue="bool" @bind-Checked="@includePrereleased">@includePrereleased</Blazorise.Switch>
             </Blazorise.FieldBody>
@@ -51,7 +51,7 @@
     </Column>
     <Column ColumnSize="ColumnSize.Is6">
         <Blazorise.Field Horizontal="true">
-            <Blazorise.FieldLabel ColumnSize="ColumnSize.Is5">Include Dependency:</Blazorise.FieldLabel>
+            <Blazorise.FieldLabel ColumnSize="ColumnSize.Is5">Dependency:</Blazorise.FieldLabel>
             <Blazorise.FieldBody ColumnSize="ColumnSize.Is7">
                 <Blazorise.Switch TValue="bool" @bind-Checked="@includeDependency">@includeDependency</Blazorise.Switch>
             </Blazorise.FieldBody>
@@ -61,8 +61,8 @@
 <Row>
     <Column ColumnSize="ColumnSize.Is6">
         <Blazorise.Field>
-            <FieldLabel>Repostory:</FieldLabel>
-            <TextEdit @bind-Text="@repostoryURL" Placeholder="Input repostory url..." />
+            <FieldLabel>Repository:</FieldLabel>
+            <TextEdit @bind-Text="@repostoryURL" Placeholder="Input repository url..." />
         </Blazorise.Field>
     </Column>
     <Column ColumnSize="ColumnSize.Is6">
