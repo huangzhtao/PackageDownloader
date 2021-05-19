@@ -85,10 +85,13 @@ namespace PackageDownloader.Server.Services.Container
             response.payload.Add("Resource", $"{connectionSubName} created.");
             await _downloadHubContext.Clients.Client(connectionID).Response(response);
 
+            // get python file name
+            string dockerPullFilePath = _configuration.GetSection("Container").GetValue<string>("DockerPullPythonPath");
+
             // docker pull
             Process compiler = new Process();
-            compiler.StartInfo.FileName = "docker";
-            compiler.StartInfo.Arguments = $"pull {info.image}";
+            compiler.StartInfo.FileName = "python";
+            compiler.StartInfo.Arguments = $"{dockerPullFilePath} {info.image} {_outputDirectory} {connectionSubName}";
             compiler.StartInfo.UseShellExecute = false;
             compiler.StartInfo.RedirectStandardOutput = true;
             compiler.OutputDataReceived += async (sender, args) => await sendMessageAsync(connectionID, args.Data);
@@ -101,30 +104,11 @@ namespace PackageDownloader.Server.Services.Container
             response.payload.Add("DownloadCounter", $"download finished.");
             await _downloadHubContext.Clients.Client(connectionID).Response(response);
 
-            // docker save
-            Process compiler2 = new Process();
-            compiler2.StartInfo.FileName = "docker";
-            compiler2.StartInfo.Arguments = $"save -o {_outputDirectory}/{connectionSubName}.zip {info.image}";
-            compiler2.StartInfo.UseShellExecute = false;
-            compiler2.StartInfo.RedirectStandardOutput = true;
-            compiler2.OutputDataReceived += (sender, args) => Console.WriteLine("received output: {0}", args.Data);
-            compiler2.Start();
-            compiler2.BeginOutputReadLine();
-            compiler2.WaitForExit();
-
             string readableSize = FileUtil.getFileHumanReadableSize($"{_outputDirectory}/{connectionSubName}.zip");
             // send message
             response.payload.Clear();
             response.payload.Add("CompressStatus", $"compressed ok, file sieze: {readableSize}.");
             await _downloadHubContext.Clients.Client(connectionID).Response(response);
-
-            // delete image
-            Process compiler3 = new Process();
-            compiler3.StartInfo.FileName = "docker";
-            compiler3.StartInfo.Arguments = $"rmi {info.image}";
-            compiler3.StartInfo.UseShellExecute = false;
-            compiler3.Start();
-            compiler3.WaitForExit();
 
             return connectionSubName;
         }
